@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>llukpadstore</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Prompt & Kanit -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Prompt', 'Kanit', sans-serif;
+            background-color: #FFFFD8; /* เปลี่ยนสีพื้นหลังเป็นเหลืองพาสเทลอ่อน #FFFFD8 */
+        }
+        .pastel-bg-banner {
+            background-color: #AACB73; /* เปลี่ยนสีแบนเนอร์เป็นเขียวพาสเทลเข้ม #AACB73 */
+        }
+        .pastel-circle {
+            background-color: #FFD4D4; /* เปลี่ยนวงกลมเป็นสีชมพูพาสเทล #FFD4D4 */
+        }
+        .pastel-purple-box {
+            background-color: #CDE990; /* เปลี่ยนกล่องใหญ่เป็นสีเขียวอ่อน #CDE990 */
+        }
+        .pastel-card {
+            background-color: #ffffff;
+        }
+
+        /* Animation เส้นประวิ่งรอบๆ กล่อง */
+        @keyframes dashMove {
+            0% {
+                background-position: 0 0, 100% 0, 100% 100%, 0 100%;
+            }
+            100% {
+                background-position: 20px 0, 100% 20px, calc(100% - 20px) 100%, 0 calc(100% - 20px);
+            }
+        }
+
+        .running-dashed-border {
+            background-image: 
+                linear-gradient(90deg, #AACB73 50%, transparent 50%),
+                linear-gradient(0deg, #AACB73 50%, transparent 50%),
+                linear-gradient(90deg, #AACB73 50%, transparent 50%),
+                linear-gradient(0deg, #AACB73 50%, transparent 50%);
+            background-repeat: repeat-x, repeat-y, repeat-x, repeat-y;
+            background-size: 12px 4px, 4px 12px, 12px 4px, 4px 12px;
+            background-position: 0 0, 100% 0, 100% 100%, 0 100%;
+            animation: dashMove 1s linear infinite;
+        }
+
+        /* เพิ่มขอบสีขาวให้ตัวหนังสือชื่อร้าน */
+        .store-title-outline {
+            color: #6b8e23;
+            text-shadow: 
+                -1.5px -1.5px 0 #ffffff,
+                 1.5px -1.5px 0 #ffffff,
+                -1.5px  1.5px 0 #ffffff,
+                 1.5px  1.5px 0 #ffffff,
+                -2px    0px 0 #ffffff,
+                 2px    0px 0 #ffffff,
+                 0px   -2px 0 #ffffff,
+                 0px    2px 0 #ffffff;
+        }
+
+        /* Animation ขยับลอยไปมา */
+        @keyframes floatingEffect {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .floating-title {
+            animation: floatingEffect 2.5s ease-in-out infinite;
+        }
+
+        /* เอฟเฟคโปรยร่วงหล่น (Falling Particles) */
+        .falling-particle {
+            position: fixed;
+            top: -50px;
+            z-index: 40;
+            pointer-events: none;
+            user-select: none;
+            animation: fallAnimation linear infinite;
+            filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.8));
+        }
+
+        @keyframes fallAnimation {
+            0% {
+                transform: translateY(0vh) rotate(0deg) scale(0.8);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(105vh) rotate(360deg) scale(1.2);
+                opacity: 0;
+            }
+        }
+
+        /* เอฟเฟครอยหัวใจปุ้งเวลากดคลิก/ทัช */
+        .click-heart {
+            position: fixed;
+            z-index: 100;
+            pointer-events: none;
+            user-select: none;
+            font-size: 20px;
+            animation: popHeart 0.8s ease-out forwards;
+            filter: drop-shadow(0 0 8px rgba(255, 105, 180, 0.9));
+        }
+
+        @keyframes popHeart {
+            0% {
+                transform: translate(-50%, -50%) scale(0.5) translateY(0px);
+                opacity: 1;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.4) translateY(-30px) rotate(15deg);
+                opacity: 0.9;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1) translateY(-60px) rotate(-15deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-12 flex flex-col items-center relative">
+
+    <!-- Container สำหรับเอฟเฟคโปรยร่วง (อยู่ด้านหลังสุดด้วย z-0 และ pointer-events-none) -->
+    <div id="particle-container" class="absolute inset-0 overflow-hidden pointer-events-none z-0"></div>
+
+    <!-- Toast Notification (Custom alert box) -->
+    <div id="toast" class="fixed top-5 z-50 transform -translate-y-20 opacity-0 transition-all duration-300 bg-gray-900 text-white px-6 py-3 rounded-full shadow-lg text-sm flex items-center space-x-2">
+        <i class="fa-solid fa-circle-check text-[#AACB73]"></i>
+        <span id="toast-message">คัดลอกสำเร็จแล้วค่ะ</span>
+    </div>
+
+    <!-- Container หลัก ควบคุมขนาดและความกว้างให้พอดีกับภาพต้นฉบับ -->
+    <div class="w-full max-w-sm mx-auto p-4 space-y-4 relative z-10">
+
+        <!-- ส่วนที่ 1: แบนเนอร์รูปภาพด้านบน + วงกลมเหลื่อมซ้าย -->
+        <div class="relative w-full">
+            <!-- แบนเนอร์สีเขียวพาสเทล (ปรับความสูงให้อัตโนมัติพอดีกับขนาดรูปภาพ) -->
+            <div class="relative w-full aspect-[2/1] pastel-bg-banner rounded-2xl flex flex-col items-center justify-center text-white shadow-md overflow-hidden">
+                <img id="bannerImg" src="https://i.ibb.co/1YG0zr9m/IMG-5043.jpg" class="absolute inset-0 w-full h-full object-cover" alt="Banner" onerror="this.src='https://placehold.co/600x300/AACB73/ffffff?text=Banner'">
+            </div>
+
+            <!-- วงกลมสีชมพูพาสเทลย้ายตำแหน่งลงมาอยู่ด้านล่างของปกหลัง -->
+            <div class="absolute -bottom-14 left-2 z-10">
+                <div class="relative w-32 h-32 pastel-circle rounded-full flex flex-col items-center justify-center text-white shadow-lg overflow-hidden border-4 border-white">
+                    <img id="circleImg" src="https://i.ibb.co/FL7g1f1B/IMG-5042.jpg" class="absolute inset-0 w-full h-full object-cover" alt="Circle" onerror="this.src='https://placehold.co/200x200/FFD4D4/ffffff?text=Profile'">
+                </div>
+            </div>
+        </div>
+
+        <!-- ชื่อร้าน llukpadstore พร้อมรูปภาพเล็กต่อท้าย (ขยับลอยไปมา) -->
+        <div class="w-full flex justify-end items-center space-x-1.5 pr-1 -mt-1 mb-1 floating-title">
+            <h1 class="text-xl font-bold tracking-wider store-title-outline">llukpadstore</h1>
+            <img src="https://i.postimg.cc/brYCTZmp/B0EE7C2F-313F-43CF-A6CB-5DD5730C14EE.gif" class="w-12 h-12 object-contain inline-block drop-shadow-md -mt-1" alt="Mini Cupcake" onerror="this.style.display='none'">
+        </div>
+
+        <!-- รูปภาพแอนิเมชันขนาดเล็กที่เพิ่มเข้ามาใหม่ตรงจุดที่วงไว้ (ปรับให้เต็มความกว้างหน้าเว็บ) -->
+        <div class="w-full my-2">
+            <img src="https://i.ibb.co/LKSNX45/7-B5-C1-E0-C-EE94-4-C5-F-AC4-B-6-DF7-C6-F83842.gif" class="w-full h-auto object-contain drop-shadow-sm rounded-2xl" alt="Full Width GIF Decoration" onerror="this.style.display='none'">
+        </div>
+
+        <!-- ส่วนที่ 2: กล่องสีเขียวอ่อนพาสเทลใหญ่ พร้อมเพิ่มกรอบเส้นประวิ่งรอบๆ และปรับขนาดอัตโนมัติตามรูป -->
+        <div class="relative w-full p-1 rounded-2xl shadow-md bg-white running-dashed-border">
+            <div class="rounded-xl overflow-hidden bg-white">
+                <img id="purpleImg" src="https://i.ibb.co/93whnj5p/IMG-5047.jpg" class="w-full h-auto block object-contain" alt="Green Box" onerror="this.src='https://placehold.co/600x400/CDE990/333333?text=QR+Code'">
+            </div>
+        </div>
+
+        <!-- ส่วนที่ 3: จัดเรียงแบบ 2 คอลัมน์ -->
+        <div class="grid grid-cols-2 gap-3 items-stretch">
+            
+            <!-- คอลัมน์ซ้าย: K Plus, Wallet และ Text Note -->
+            <div class="flex flex-col justify-between space-y-3">
+                <!-- K Plus -->
+                <div class="pastel-card p-2.5 rounded-2xl shadow-sm border border-[#CDE990] flex flex-col space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-1.5">
+                            <div class="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden shadow">
+                                <img src="https://i.ibb.co/nN8q14rw/EB6-A2673-A791-4-AED-95-A0-FA9-ACD97-AFC3.gif" class="w-full h-full object-cover" alt="K Plus Icon" onerror="this.style.display='none'">
+                            </div>
+                            <span class="text-[11px] font-bold text-gray-800">k plus</span>
+                        </div>
+                        <button onclick="copyToClipboard('1982593510', 'คัดลอกเลขบัญชี K Plus แล้ว')" class="bg-[#AACB73] hover:bg-[#8fbc5c] text-white text-[10px] font-medium px-2 py-0.5 rounded-md shadow-sm flex items-center space-x-1 transition cursor-pointer">
+                            <i class="fa-regular fa-copy text-[9px]"></i>
+                            <span>คัดลอก</span>
+                        </button>
+                    </div>
+                    <div class="bg-[#FFFFD8]/50 py-1.5 px-2 rounded-xl text-center shadow-inner">
+                        <span id="kplus-num" class="text-xs font-bold text-gray-700 tracking-wider">1982593510</span>
+                    </div>
+                </div>
+
+                <!-- Wallet -->
+                <div class="pastel-card p-2.5 rounded-2xl shadow-sm border border-[#CDE990] flex flex-col space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-1.5">
+                            <div class="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden shadow">
+                                <img src="https://i.ibb.co/nN8q14rw/EB6-A2673-A791-4-AED-95-A0-FA9-ACD97-AFC3.gif" class="w-full h-full object-cover" alt="Wallet Icon" onerror="this.style.display='none'">
+                            </div>
+                            <span class="text-[11px] font-bold text-gray-800">wallet</span>
+                        </div>
+                        <button onclick="copyToClipboard('0927503962', 'คัดลอกเบอร์ Wallet แล้ว')" class="bg-[#AACB73] hover:bg-[#8fbc5c] text-white text-[10px] font-medium px-2 py-0.5 rounded-md shadow-sm flex items-center space-x-1 transition cursor-pointer">
+                            <i class="fa-regular fa-copy text-[9px]"></i>
+                            <span>คัดลอก</span>
+                        </button>
+                    </div>
+                    <div class="bg-[#FFFFD8]/50 py-1.5 px-2 rounded-xl text-center shadow-inner">
+                        <span id="wallet-num" class="text-xs font-bold text-gray-700 tracking-wider">0927503962</span>
+                    </div>
+                </div>
+
+                <!-- Text Note -->
+                <div class="pastel-card p-3 rounded-2xl shadow-sm border border-[#CDE990] space-y-2 flex-1 flex flex-col justify-between">
+                    <div class="flex items-center space-x-1.5">
+                        <i class="fa-regular fa-pen-to-square text-[#6b8e23] text-xs"></i>
+                        <span class="text-[11px] font-bold text-gray-800">โน๊ตสลิป</span>
+                    </div>
+
+                    <div class="flex items-center">
+                        <div class="bg-[#FFFFD8] px-2.5 py-2 rounded-xl w-full flex items-center justify-between shadow-sm">
+                            <span class="text-[10px] font-semibold text-gray-700 truncate mr-1">โอนให้ : llukpadstore</span>
+                            <button onclick="copyToClipboard('โอนให้ : llukpadstore', 'คัดลอกข้อความแล้ว')" class="text-[#6b8e23] hover:text-[#556b2f] ml-1 cursor-pointer">
+                                <i class="fa-solid fa-clipboard text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="text-[9px] text-gray-500 leading-tight">
+                        อย่าลืมโน๊ตสลิปก่อนกดโอนด้วยนะคะ
+                    </div>
+                </div>
+            </div>
+
+            <!-- คอลัมน์ขวา: กรอบการ์ดแนวตั้งพร้อมรูปภาพและข้อความชื่อ -->
+            <div class="pastel-card p-3 rounded-3xl shadow-sm border border-[#CDE990] flex flex-col justify-between items-center relative">
+                <div class="absolute -top-2.5 bg-white px-2 py-0.5 rounded-full border border-[#CDE990] shadow-sm text-[#6b8e23] text-[10px]">
+                    <i class="fa-solid fa-paw"></i>
+                </div>
+                
+                <div class="relative w-full flex-1 min-h-[180px] rounded-2xl overflow-hidden bg-gray-100 shadow-inner mt-1 border-2 border-dashed border-[#CDE990]">
+                    <img id="rightImg1" src="https://i.ibb.co/60qBJP2v/IMG-5044.jpg" class="absolute inset-0 w-full h-full object-cover" alt="Right Box Image 1" onerror="this.src='https://placehold.co/300x400/ffffff/333333?text=Photo'">
+                </div>
+
+                <div class="w-full bg-[#FFFFD8]/60 rounded-xl py-2 px-2 mt-2 flex items-center justify-center shadow-inner border border-[#CDE990]">
+                    <span class="text-[11px] font-bold text-gray-700 tracking-wide text-center">ชื่อ : กุลธิดา กุเลารัมย์</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- เมนูซ่อน (Accordion) ด้านล่างรูป QR ทางขวา -->
+        <div class="w-full bg-[#CDE990]/40 border border-[#CDE990] rounded-2xl shadow-sm overflow-hidden transition-all duration-300">
+            <button type="button" onclick="toggleAccordion()" class="w-full px-4 py-3 flex items-center justify-between text-[#556b2f] text-xs font-semibold focus:outline-none cursor-pointer bg-transparent border-none">
+                <div class="flex items-center space-x-2 pointer-events-none">
+                    <i class="fa-solid fa-heart text-[#FFD4D4] text-xs"></i>
+                    <span class="tracking-wide">Welcome โปรดอ่านก่อนชำระ ୨ৎ</span>
+                </div>
+                <div class="flex items-center space-x-2 pointer-events-none">
+                    <i id="accordion-icon" class="fa-solid fa-chevron-down text-xs transition-transform duration-300 transform rotate-180"></i>
+                </div>
+            </button>
+            <div id="accordion-content" class="hidden px-4 pb-3 text-[10px] text-gray-600 leading-relaxed border-t border-[#CDE990]/60 pt-2 space-y-2">
+                <div class="flex flex-row items-center justify-between gap-3">
+                    <div class="space-y-1 text-left flex-1">
+                        <p>• ตรวจสอบชื่อให้เรียบร้อยก่อนโอนนะคะ</p>
+                        <p>• หากไม่โน้ตโอนเพิ่ม 1 บ 𓈒 พร้อมโน้ต 🥕</p>
+                        <p>• ชื่อต้องตรง กับ สลิปแรกที่โอนทุกครั้ง</p>
+                        <p>• ขอเลขแล้วไม่โอน ขอ block นะคะ ⭐️</p>
+                        <p>• หากมีปัญหาหรือยังไม่สะดวกแจ้งก่อนได้ค่ะ</p>
+                    </div>
+                    <div class="w-24 h-24 flex-shrink-0 flex items-center justify-center">
+                        <img src="https://i.ibb.co/WNc39FgN/32247-C30-A7-AA-41-CF-AC6-C-654-EDE7-FC9-C3.gif" class="w-full h-full object-contain rounded-xl drop-shadow-sm" alt="Accordion GIF Decoration" onerror="this.style.display='none'">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ส่วนที่ 6: การ์ดแนะนำตัว / About Me -->
+        <div class="space-y-3 px-1">
+            <div class="flex items-center justify-between border-b border-[#CDE990] pb-2">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-regular fa-id-badge text-[#6b8e23]"></i>
+                    <span class="font-semibold text-gray-700 text-xs tracking-wide">𝗍𝗒𝗌𝗆 𝖿𝗈𝗋 𝗌𝗎𝗉𝗉𝗈𝗋𝗍 ݂</span>
+                </div>
+                <i class="fa-solid fa-clover text-[#AACB73] text-xs"></i>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="relative bg-white p-2 pb-5 rounded shadow-sm transform -rotate-1 border border-gray-100">
+                    <img id="aboutImg1" src="https://i.ibb.co/5xsgD4K1/IMG-5046.jpg" class="w-full h-28 object-cover rounded" alt="Photo 1" onerror="this.src='https://placehold.co/200x200/ffffff/333333?text=Memory+1'">
+                    <div class="absolute top-1 left-1 bg-white/80 p-1 rounded-full text-xs shadow">
+                        <i class="fa-solid fa-paperclip text-gray-500 text-[9px]"></i>
+                    </div>
+                </div>
+                <div class="relative bg-white p-2 pb-5 rounded shadow-sm transform rotate-1 border border-gray-100">
+                    <img id="aboutImg2" src="https://i.ibb.co/bhvvqrx/IMG-5045.jpg" class="w-full h-28 object-cover rounded" alt="Photo 2" onerror="this.src='https://placehold.co/200x200/ffffff/333333?text=Memory+2'">
+                </div>
+            </div>
+
+            <!-- รูปภาพแอนิเมชันขนาดเล็กที่เพิ่มเข้ามาใหม่ตรงจุดที่วงไว้ด้านล่างการ์ด (ขนาดเท่าหน้าเว็บ) -->
+            <div class="w-full my-2">
+                <img src="https://i.ibb.co/S7Rrnd2B/14-D584-F3-6175-4012-8419-98-A304-FB0-AC8.gif" class="w-full h-auto object-contain drop-shadow-sm rounded-2xl" alt="Footer GIF Decoration" onerror="this.style.display='none'">
+            </div>
+
+            <div class="text-[11px] md:text-xs text-gray-700 leading-relaxed space-y-1.5 whitespace-pre-line text-center py-1 font-medium">
+                🥨𓈒♡♡ ݂   ݁ ขอให้เป็นวันที่ดีของลูกค้าที่น่ารักนะคะ
+ฝากพลัสให้กับทางร้านด้วยน้า ขอบคุณนะค้าบ 𓈒 ☘️ ݂ 🍮𓈒
+            </div>
+
+            <div class="flex items-center justify-between pt-2 border-t border-dashed border-[#CDE990]">
+                <div class="flex items-center space-x-1.5 text-[11px] md:text-xs text-gray-600">
+                    <i class="fa-solid fa-heart text-[#FFD4D4] text-xs"></i>
+                    <span>𝜗𝜚⑅  hi check𓈒 check  ݁  ┈┈ ·♡̭</span>
+                </div>
+                <span class="text-[10px] md:text-xs text-gray-500">(@llukpadstore)</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JavaScript สำหรับฟังก์ชันคัดลอก, แสดงแจ้งเตือน และ Accordion -->
+    <script>
+        // สร้างเอฟเฟคโปรยร่วงหล่น (ดาว, หัวใจ, โคลเวอร์เรืองแสง โดยใช้ FontAwesome Icons ไม่มีอิโมจิข้อความ)
+        function createFallingParticles() {
+            const container = document.getElementById('particle-container');
+            const symbols = [
+                '<i class="fa-solid fa-star text-yellow-300"></i>',
+                '<i class="fa-solid fa-heart text-pink-300"></i>',
+                '<i class="fa-solid fa-clover text-emerald-300"></i>',
+                '<i class="fa-solid fa-spa text-emerald-400"></i>',
+                '<i class="fa-solid fa-sparkles text-amber-200"></i>'
+            ];
+            
+            // สร้างอนุภาคทุกๆ 350 มิลลิวินาที
+            setInterval(() => {
+                const particle = document.createElement('div');
+                particle.className = 'falling-particle';
+                particle.innerHTML = symbols[Math.floor(Math.random() * symbols.length)];
+                
+                // สุ่มตำแหน่งแนวนอน ขนาด และความเร็ว
+                const randomX = Math.random() * window.innerWidth;
+                const randomDuration = 4 + Math.random() * 5; // 4-9 วินาที
+                const randomSize = 12 + Math.random() * 16; // 12-28px
+                
+                particle.style.left = randomX + 'px';
+                particle.style.fontSize = randomSize + 'px';
+                particle.style.animationDuration = randomDuration + 's';
+                
+                container.appendChild(particle);
+                
+                // ลบ element เมื่อร่วงจนสุดจอเพื่อประหยัดหน่วยความจำ
+                setTimeout(() => {
+                    particle.remove();
+                }, randomDuration * 1000);
+            }, 350);
+        }
+
+        // เอฟเฟคคลิกหน้าจอแล้วขึ้นรูปหัวใจปุ้ง
+        function initClickHeartEffect() {
+            const heartSymbols = [
+                '<i class="fa-solid fa-heart text-pink-400"></i>',
+                '<i class="fa-solid fa-heart-pulse text-rose-400"></i>',
+                '<i class="fa-solid fa-sparkles text-amber-200"></i>'
+            ];
+            
+            window.addEventListener('click', (e) => {
+                const heart = document.createElement('div');
+                heart.className = 'click-heart';
+                heart.innerHTML = heartSymbols[Math.floor(Math.random() * heartSymbols.length)];
+                
+                heart.style.left = e.clientX + 'px';
+                heart.style.top = e.clientY + 'px';
+                
+                document.body.appendChild(heart);
+                
+                setTimeout(() => {
+                    heart.remove();
+                }, 800);
+            });
+        }
+
+        // เริ่มต้นเอฟเฟคทันทีที่โหลดหน้าเว็บ
+        window.addEventListener('DOMContentLoaded', () => {
+            createFallingParticles();
+            initClickHeartEffect();
+        });
+
+        // ฟังก์ชันเปิด-ปิดเมนูซ่อน (Accordion)
+        function toggleAccordion() {
+            const content = document.getElementById('accordion-content');
+            const icon = document.getElementById('accordion-icon');
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                content.classList.add('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            toastMsg.innerText = message;
+            toast.classList.remove('-translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('-translate-y-20', 'opacity-0');
+            }, 2500);
+        }
+
+        function copyToClipboard(text, message) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast(message);
+                }).catch(() => {
+                    fallbackCopy(text, message);
+                });
+            } else {
+                fallbackCopy(text, message);
+            }
+        }
+
+        function fallbackCopy(text, message) {
+            const textarea = document.createElement("textarea");
+            textarea.value = text;
+            textarea.style.position = "fixed";
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast(message);
+            } catch (err) {
+                showToast("ไม่สามารถคัดลอกได้");
+            }
+            document.body.removeChild(textarea);
+        }
+    </script>
+</body>
+</html>
